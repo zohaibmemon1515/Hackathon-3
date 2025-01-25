@@ -64,7 +64,7 @@ const ProductList: React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // const response = await fetch("/api/products");
+    
 
       const data = await client.fetch(`*[_type=="product"]{
         _id,
@@ -76,7 +76,7 @@ const ProductList: React.FC = () => {
         description,
         isNew
       }`);
-      // const data = await response.json();
+  
       setProducts(data);
       setFilteredProducts(data);
       setError(false);

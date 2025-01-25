@@ -65,8 +65,7 @@ const Navbar = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // const res = await fetch("/api/products");
-        // const data = await res.json();
+        
 
         const data = await client.fetch(`*[_type=="product"]{
           _id,

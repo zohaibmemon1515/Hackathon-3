@@ -56,11 +56,6 @@ const ProductPage: React.FC = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        // const res = await fetch("/api/products");
-        // if (!res.ok) {
-        //   throw new Error("Failed to fetch products");
-        // }
-        // const data = await res.json();
         const data = await client.fetch(`*[_type=="product"]{
           _id,
           title,
@@ -109,7 +104,7 @@ const ProductPage: React.FC = () => {
       const cartItem: CartItem = {
         id: product._id,
         title: product.title,
-        price: sanitizePrice(product.price), // Sanitize price
+        price: sanitizePrice(product.price), 
         image: product.imageUrl,
         quantity: 1,
       };

@@ -13,13 +13,13 @@ export async function GET(request: Request) {
       return NextResponse.json(product, { status: 200 });
     }
 
-    // Validate if tags is not empty
+   
     if (tags && tags.length > 0) {
       const relatedProducts = await fetchRelatedProductsByTags(tags);
       return NextResponse.json(relatedProducts, { status: 200 });
     }
 
-    // Default to fetching all products if no specific parameters are given
+    
     const data = await client.fetch(`*[_type=="product"]{
       _id,
       title,

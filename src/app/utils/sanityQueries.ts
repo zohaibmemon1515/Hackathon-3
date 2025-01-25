@@ -22,7 +22,7 @@ export async function fetchItemByID(id: string) {
 }
 export async function fetchRelatedProductsByTags(tags: string[]) {
   if (!tags || tags.length === 0) {
-    // Return an empty array instead of throwing an error
+   
     return [];
   }
 
