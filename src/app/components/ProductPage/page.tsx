@@ -55,7 +55,7 @@ const ProductPage: React.FC = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/products");
+        const res = await fetch("api/products");
         if (!res.ok) {
           throw new Error("Failed to fetch products");
         }

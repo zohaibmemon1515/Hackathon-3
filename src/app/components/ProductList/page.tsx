@@ -63,7 +63,7 @@ const ProductList: React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch("api/products");
       const data = await response.json();
       setProducts(data);
       setFilteredProducts(data);

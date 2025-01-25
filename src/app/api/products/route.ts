@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       const product = await fetchItemByID(id);
       return NextResponse.json(product, { status: 200 });
     }
-    if (tags) {
+    if (tags && tags.length > 0) {
       const relatedProducts = await fetchRelatedProductsByTags(tags);
       return NextResponse.json(relatedProducts, { status: 200 });
     }
@@ -30,6 +30,7 @@ export async function GET(request: Request) {
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Error in GET handler:", error);
-    return new NextResponse("Error fetching data", { status: 500 });
+    // Ensure the error response is valid JSON
+    return NextResponse.json({ message: "Error fetching data", error: error }, { status: 500 });
   }
 }
