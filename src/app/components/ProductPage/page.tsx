@@ -8,6 +8,7 @@ import LoadingPage from "../Loader/page";
 import Image from "next/image";
 import { useCart } from "@/app/context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
+import { client } from "@/app/lib/sanity";
 
 interface SanityProduct {
   _id: string;
@@ -55,11 +56,21 @@ const ProductPage: React.FC = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/products");
-        if (!res.ok) {
-          throw new Error("Failed to fetch products");
-        }
-        const data = await res.json();
+        // const res = await fetch("/api/products");
+        // if (!res.ok) {
+        //   throw new Error("Failed to fetch products");
+        // }
+        // const data = await res.json();
+        const data = await client.fetch(`*[_type=="product"]{
+          _id,
+          title,
+          "imageUrl": productImage.asset->url,
+          price,
+          tags,
+          discountPercentage,
+          description,
+          isNew
+        }`);
         setProducts(data);
         setError(false);
       } catch {

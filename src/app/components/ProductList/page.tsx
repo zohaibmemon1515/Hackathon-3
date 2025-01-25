@@ -9,6 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/app/context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
+import { client } from "@/app/lib/sanity";
 
 interface SanityProduct {
   _id: string;
@@ -63,8 +64,19 @@ const ProductList: React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/products");
-      const data = await response.json();
+      // const response = await fetch("/api/products");
+
+      const data = await client.fetch(`*[_type=="product"]{
+        _id,
+        title,
+        "imageUrl": productImage.asset->url,
+        price,
+        tags,
+        discountPercentage,
+        description,
+        isNew
+      }`);
+      // const data = await response.json();
       setProducts(data);
       setFilteredProducts(data);
       setError(false);

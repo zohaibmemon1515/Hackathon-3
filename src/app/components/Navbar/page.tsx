@@ -14,6 +14,7 @@ import { useCart } from "@/app/context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { TfiClose } from "react-icons/tfi";
 import { BsBagX } from "react-icons/bs";
+import { client } from "@/app/lib/sanity";
 
 interface SanityProduct {
   _id: string;
@@ -64,8 +65,19 @@ const Navbar = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/api/products");
-        const data = await res.json();
+        // const res = await fetch("/api/products");
+        // const data = await res.json();
+
+        const data = await client.fetch(`*[_type=="product"]{
+          _id,
+          title,
+          "imageUrl": productImage.asset->url,
+          price,
+          tags,
+          discountPercentage,
+          description,
+          isNew
+        }`);
         setProducts(data);
       } catch (error) {
         console.error("Error fetching products:", error);
