@@ -12,10 +12,12 @@ export async function GET(request: Request) {
       const product = await fetchItemByID(id);
       return NextResponse.json(product, { status: 200 });
     }
+
     if (tags && tags.length > 0) {
       const relatedProducts = await fetchRelatedProductsByTags(tags);
       return NextResponse.json(relatedProducts, { status: 200 });
     }
+
     // Default to fetching all products if no specific parameters are given
     const data = await client.fetch(`*[_type=="product"]{
       _id,
@@ -30,7 +32,11 @@ export async function GET(request: Request) {
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Error in GET handler:", error);
-    // Ensure the error response is valid JSON
-    return NextResponse.json({ message: "Error fetching data", error: error }, { status: 500 });
+
+    // Return a properly formatted error response
+    return NextResponse.json(
+      { message: "Error fetching data", error: error },
+      { status: 500 }
+    );
   }
 }
