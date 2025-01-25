@@ -22,26 +22,21 @@ export async function fetchItemByID(id: string) {
 }
 export async function fetchRelatedProductsByTags(tags: string[]) {
   if (!tags || tags.length === 0) {
-    throw new Error("Tags array is empty");
+    // Return an empty array instead of throwing an error
+    return [];
   }
 
-  try {
-    
-    return await client.fetch(
-      `*[_type == "product" && (tags[0] in $tags || tags[1] in $tags || tags[2] in $tags || tags[3] in $tags)]{
-        _id,
-        title,
-        "imageUrl": productImage.asset->url,
-        price,
-        tags,
-        discountPercentage,
-        description,
-        isNew
-      }`,
-      { tags }
-    );
-  } catch (error) {
-    console.error("Error fetching related products:", error);
-    throw new Error("Error fetching related products");
-  }
+  const query = `*[_type == "product" && tags in $tags]{
+    _id,
+    title,
+    "imageUrl" :productImage.asset -> url,
+    price,
+    tags,
+    discountPercentage,
+    description,
+    isNew
+  }`;
+
+  return await client.fetch(query, { tags });
 }
+
