@@ -1,0 +1,6 @@
+Test Case ID,Test Case Description,Test Steps,Expected Result,Actual Result,Status,Severity Level,Assigned To,Remarks
+TC001,Verify homepage loads correctly,Open homepage,Homepage should load within 2 seconds with no errors,Homepage loaded successfully in 1.8 seconds,Passed,Low,-,No issues found
+TC002,Check login functionality,Enter valid credentials and click login,User should be redirected to the dashboard,User redirected to the dashboard,Passed,Low,-,No issues found
+TC003,Ensure checkout process works,Add item to cart,proceed to checkout and complete payment,Order confirmation page should be displayed,Passed,Low,-,No issues found
+TC004,Check site performance,Run Lighthouse audit for https://hackathon-3-git-main-zohaib-memons-projects.vercel.app,Performance score should be 90+,Performance score was 85,Failed,High,Frontend Team,Investigate and improve site performance
+TC005,Validate cart functionality,"Add, remove, and update items in the cart",Cart should update correctly for all actions,Cart updated correctly for all actions,Passed,Low,-,No issues found
