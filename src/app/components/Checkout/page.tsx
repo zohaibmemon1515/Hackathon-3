@@ -141,7 +141,7 @@ const CheckoutForm = () => {
       });
   
     
-      const response = await fetch("http://localhost:3000/api/sendEmail", {
+      const response = await fetch("/api/sendEmail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
