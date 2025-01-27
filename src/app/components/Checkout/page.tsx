@@ -106,7 +106,6 @@ const CheckoutForm = () => {
 
     if (!validateForm()) return;
 
-   
     const orderId = Math.floor(100000 + Math.random() * 900000);
     const productIds = cartItems.map((item) => item.id);
 
@@ -130,15 +129,42 @@ const CheckoutForm = () => {
     };
 
     try {
+     
       await client.create(doc);
-      clearCart();
-      router.push(
-        `/components/SuccessCard?email=${encodeURIComponent(formData.email)}&orderId=${orderId}`
-      );
+  
+    
+      console.log({
+        email: formData.email,
+        orderId: orderId,
+        firstName: formData.firstName,
+        orderItems: cartItems,
+      });
+  
+    
+      const response = await fetch("http://localhost:3000/api/sendEmail", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          orderId: orderId,
+          firstName: formData.firstName,
+          orderItems: cartItems,
+        }),
+      });
+  
+      if (response.ok) {
+        clearCart();
+        router.push(
+          `/components/SuccessCard?email=${encodeURIComponent(formData.email)}&orderId=${orderId}`
+        );
+      } else {
+        alert("Failed to send order confirmation email.");
+      }
     } catch (error) {
       console.error("Error creating order:", error);
       alert("An error occurred while placing the order. Please try again.");
-    } finally {
     }
   };
 
@@ -379,7 +405,7 @@ const CheckoutForm = () => {
                 Your cart is empty!
               </h3>
               <p className="text-sm text-gray-500 mb-4">
-              Looks like you haven&apos;t added anything yet.
+                Looks like you haven&apos;t added anything yet.
               </p>
               <Link href="/Pages/Shop">
                 <button className="px-6 py-2 bg-[#B88E2F] text-white font-bold rounded-md hover:bg-[#c79c38]">
