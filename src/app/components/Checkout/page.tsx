@@ -141,7 +141,7 @@ const CheckoutForm = () => {
       });
   
     
-      const response = await fetch("/api/sendEmail", {
+      const response = await fetch("https://hackathon-3-git-main-zohaib-memons-projects.vercel.app/api/sendEmail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
