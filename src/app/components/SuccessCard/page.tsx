@@ -9,7 +9,6 @@ const SuccessCard: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Use searchParams only on the client side
   const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
     null
   );
@@ -17,7 +16,6 @@ const SuccessCard: React.FC = () => {
   useEffect(() => {
     setIsMounted(true);
 
-    // Only access searchParams in useEffect to ensure it's on the client side
     setSearchParams(new URLSearchParams(window.location.search));
   }, []);
 

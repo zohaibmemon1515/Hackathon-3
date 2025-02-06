@@ -7,7 +7,6 @@ import Navbar from "@/app/components/Navbar/page";
 import ProductPage from "@/app/components/ProductPage/page";
 
 
-
 const MainPage = () => {
   return (
     <div>
