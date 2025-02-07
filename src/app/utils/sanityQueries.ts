@@ -26,16 +26,17 @@ export async function fetchRelatedProductsByTags(tags: string[]) {
     return [];
   }
 
-  const query = `*[_type == "product" && tags in $tags]{
+  const query = `*[_type == "product" && count(tags[@ in $tags]) > 0]{
     _id,
     title,
-    "imageUrl" :productImage.asset -> url,
+    "imageUrl" : productImage.asset -> url,
     price,
     tags,
     discountPercentage,
     description,
     isNew
   }`;
+
 
   return await client.fetch(query, { tags });
 }

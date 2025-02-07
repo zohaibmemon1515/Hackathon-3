@@ -15,8 +15,16 @@ import FeatureBar from "../../FeatureBar/page";
 import Footer from "../../Footer/page";
 import { useCart } from "@/app/context/CartContext";
 
-interface ProductDetail {
+interface CartItem {
   id: string;
+  title: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
+interface ProductDetail {
+  _id: string;
   title: string;
   price: number;
   imageUrl: string;
@@ -55,13 +63,14 @@ const ProductDetails = () => {
   const handleDecrement = () => setQuantity((prev) => (prev > 1 ? prev - 1 : prev));
   const handleAddToCart = () => {
     if (!productDetail) return;
-    addToCart({
-      id: productDetail.id,
+    const cartItem: CartItem = {
+      id: productDetail._id,
       title: productDetail.title,
-      price: productDetail.price,
-      quantity,
+      price: productDetail.price, 
       image: productDetail.imageUrl,
-    });
+      quantity,
+    };
+    addToCart(cartItem);
   };
 
   const getCurrentUrl = () => {
@@ -140,7 +149,7 @@ const ProductDetails = () => {
             <div className="flex space-x-4 mt-4 border-b border-gray pb-6">
               <div className="flex items-center border rounded-md">
                 <button
-                  className="px-3 py-2 bg-black text-white opacity-50 hover:bg-[#B88E2F] hover:opacity-100"
+                  className="px-3 py-2 text-white bg-[#B88E2F] hover:opacity-80"
                   onClick={handleDecrement}
                   aria-label="Decrease Quantity"
                 >
@@ -148,7 +157,7 @@ const ProductDetails = () => {
                 </button>
                 <span className="px-4">{quantity}</span>
                 <button
-                  className="px-3 py-2 bg-black text-white opacity-50 hover:bg-[#B88E2F] hover:opacity-100"
+                  className="px-3 py-2 text-white bg-[#B88E2F] hover:opacity-80"
                   onClick={handleIncrement}
                   aria-label="Increase Quantity"
                 >
@@ -156,7 +165,7 @@ const ProductDetails = () => {
                 </button>
               </div>
               <button
-                className="px-3 py-2 text-sm bg-white border font-semibold text-black rounded-md hover:bg-[#B88E2F] hover:text-white transition"
+                className="px-3 py-2 text-sm font-semibold hover:opacity-80 text-white rounded-md bg-[#B88E2F] hover:text-white transition"
                 onClick={handleAddToCart}
               >
                 Add to Cart
@@ -173,7 +182,6 @@ const ProductDetails = () => {
               </p>
             </div>
 
-            {/* Social Share */}
             <div className="flex items-center space-x-4 mt-4">
               <span className="text-sm sm:text-base font-bold text-black opacity-50">
                 Share

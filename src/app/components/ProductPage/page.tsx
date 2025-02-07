@@ -98,20 +98,14 @@ const ProductPage: React.FC = () => {
   };
 
   const handleAddToCart = (product: SanityProduct) => {
-    const isAlreadyInCart = false;
-
-    if (!isAlreadyInCart) {
-      const cartItem: CartItem = {
-        id: product._id,
-        title: product.title,
-        price: sanitizePrice(product.price), 
-        image: product.imageUrl,
-        quantity: 1,
-      };
-      addToCart(cartItem);
-    } else {
-      alert("This product is already in your cart!");
-    }
+    const cartItem: CartItem = {
+      id: product._id,
+      title: product.title,
+      price: sanitizePrice(product.price),
+      image: product.imageUrl,
+      quantity: 1,
+    };
+    addToCart(cartItem);
   };
 
   const handleAddToWishlist = (product: SanityProduct) => {

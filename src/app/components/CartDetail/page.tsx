@@ -55,7 +55,7 @@ const CartDetail = () => {
                       Rs. {item.price * item.quantity}
                     </span>
                     <button
-                      className="flex justify-end text-amber-600 hover:text-amber-800"
+                      className="flex justify-end text-[#B88E2F]  hover:opacity-80"
                       onClick={() => removeFromCart(item.id)}
                     >
                       <FaTrash className="h-6 w-6" />
@@ -65,8 +65,18 @@ const CartDetail = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-600 text-lg">
-              Your cart is empty
+            <div className="relative mt-24 text-center z-10 px-8 py-6 bg-white bg-opacity-70 backdrop-blur-lg rounded-2xl shadow-lg">
+              <p className="text-xl font-semibold text-gray-800 animate-bounce mb-4">
+                Your cart is empty.
+              </p>
+              <p className="text-sm mt-3 text-gray-600 opacity-90 mb-6">
+                Add some products to your cart and make shopping a breeze!
+              </p>
+              <Link href={"/Pages/shop"}>
+                <button className="mt-4 inline-block px-8 py-3 bg-[#B88E2F] text-white text-md font-semibold rounded-full shadow-md hover:scale-105 transform transition-all">
+                  Start Shopping
+                </button>
+              </Link>
             </div>
           )}
         </div>
@@ -90,12 +100,12 @@ const CartDetail = () => {
           <div className="flex justify-center items-center">
             {cartItems.length > 0 ? (
               <Link href="/Pages/Checkout">
-              <button className="mt-12 px-12 hover:bg-amber-600 hover:text-white py-2 rounded-lg text-black font-semibold border-black border-2 hover:border-none">
-                Check Out
-              </button>
+                <button className="mt-12 px-12 bg-[#B88E2F] text-white py-2 rounded-lg font-semibold  hover:opacity-80">
+                  Check Out
+                </button>
               </Link>
             ) : (
-              <span className="mt-12 px-12 py-2 rounded-lg text-gray-400 font-semibold border-black border-2 cursor-not-allowed">
+              <span className="mt-12 px-12 py-2 rounded-lg bg-[#B88E2F] text-white font-semibold cursor-not-allowed">
                 Your cart is empty
               </span>
             )}

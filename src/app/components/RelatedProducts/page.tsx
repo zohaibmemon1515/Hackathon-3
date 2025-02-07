@@ -3,14 +3,13 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Custom500 from "@/app/500";
-import { fetchRelatedProductsByTags } from "@/app/utils/sanityQueries"; // Ensure this function is implemented
+import { fetchRelatedProductsByTags } from "@/app/utils/sanityQueries";
 import { FaShare, FaExchangeAlt, FaHeart } from "react-icons/fa";
 import Image from "next/image";
 import { useCart } from "@/app/context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import Link from "next/link";
 
-// Interface for Product type
 interface Product {
   _id: string;
   title: string;
@@ -31,7 +30,10 @@ const sanitizePrice = (price: string): number => {
 };
 
 const getFirstFiveWords = (description: string): string => {
-  return description.split(" ").slice(0, 5).join(" ") + (description.split(" ").length > 5 ? "..." : "");
+  return (
+    description.split(" ").slice(0, 5).join(" ") +
+    (description.split(" ").length > 5 ? "..." : "")
+  );
 };
 
 const RelatedProduct: React.FC = () => {
@@ -39,10 +41,11 @@ const RelatedProduct: React.FC = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
-  const { addToCart, cartItems } = useCart();
+  const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, wishlistItems } = useWishlist();
 
   useEffect(() => {
+    debugger;
     const tags = searchParams.get("tags")?.split(",");
 
     if (!tags || tags.length === 0) {
@@ -54,6 +57,7 @@ const RelatedProduct: React.FC = () => {
     const fetchRelatedProducts = async () => {
       setLoading(true);
       try {
+        debugger;
         const data = await fetchRelatedProductsByTags(tags);
 
         const filteredProducts = data.filter((product: Product) =>
@@ -85,9 +89,6 @@ const RelatedProduct: React.FC = () => {
   }
 
   const handleAddToCart = (product: Product) => {
-    const isAlreadyInCart = cartItems.some((item) => item.id === product._id);
-
-    if (!isAlreadyInCart) {
       const cartItem = {
         id: product._id,
         title: product.title,
@@ -96,9 +97,6 @@ const RelatedProduct: React.FC = () => {
         quantity: 1,
       };
       addToCart(cartItem);
-    } else {
-      alert("Product is already in the cart.");
-    }
   };
 
   const handleAddToWishlist = (product: Product) => {
@@ -208,7 +206,9 @@ const RelatedProduct: React.FC = () => {
                 {getFirstFiveWords(relatedProduct.description)}
               </p>
               <div className="flex items-center justify-between mt-3">
-                <p className="font-semibold text-base">RP: {relatedProduct.price}</p>
+                <p className="font-semibold text-base">
+                  RP: {relatedProduct.price}
+                </p>
                 {relatedProduct.oldPrice && (
                   <p className="text-gray-400 line-through text-sm">
                     {relatedProduct.oldPrice}

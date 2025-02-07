@@ -9,6 +9,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import bcrypt from "bcryptjs";
+import Cookies from "js-cookie";
 
 export default function Login() {
   const router = useRouter();
@@ -97,6 +98,9 @@ export default function Login() {
           return;
         }
 
+        // Save user session in cookies
+        Cookies.set("user", JSON.stringify({ email: user.email, username: user.username }), { expires: 7 });
+
         showToast("Login successful!", "success");
         setTimeout(() => router.push("/"), 3000);
       } catch {
@@ -136,7 +140,11 @@ export default function Login() {
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={`w-full px-6 py-3 border ${formik.touched.email && formik.errors.email ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-[#B88E2F] outline-none transition-all duration-300 ease-in-out`}
+              className={`w-full px-6 py-3 border ${
+                formik.touched.email && formik.errors.email
+                  ? "border-red-500"
+                  : "border-gray-300"
+              } rounded-lg focus:ring-2 focus:ring-[#B88E2F] outline-none transition-all duration-300 ease-in-out`}
             />
             {formik.touched.email && formik.errors.email && (
               <motion.p
@@ -158,7 +166,11 @@ export default function Login() {
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className={`w-full px-6 py-3 border ${formik.touched.password && formik.errors.password ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-[#B88E2F] outline-none transition-all duration-300 ease-in-out`}
+              className={`w-full px-6 py-3 border ${
+                formik.touched.password && formik.errors.password
+                  ? "border-red-500"
+                  : "border-gray-300"
+              } rounded-lg focus:ring-2 focus:ring-[#B88E2F] outline-none transition-all duration-300 ease-in-out`}
             />
             {formik.touched.password && formik.errors.password && (
               <motion.p
@@ -176,7 +188,9 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3 text-white bg-[#B88E2F] rounded-lg shadow-lg ${loading ? "bg-opacity-75" : "hover:bg-[#A6791D]"} transition duration-300`}
+              className={`w-full py-3 text-white bg-[#B88E2F] rounded-lg shadow-lg ${
+                loading ? "bg-opacity-75" : "hover:bg-[#A6791D]"
+              } transition duration-300`}
             >
               {loading ? "Loading..." : "Login"}
             </button>

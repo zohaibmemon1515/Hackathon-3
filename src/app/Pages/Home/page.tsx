@@ -6,7 +6,6 @@ import Inspiration from "@/app/components/Inspiration/page";
 import Navbar from "@/app/components/Navbar/page";
 import ProductPage from "@/app/components/ProductPage/page";
 
-
 const MainPage = () => {
   return (
     <div>
@@ -20,4 +19,5 @@ const MainPage = () => {
     </div>
   );
 };
+
 export default MainPage;

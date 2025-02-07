@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaBars, FaRegHeart, FaRegUser } from "react-icons/fa";
+import { FaBars, FaRegHeart, FaRegUser, FaUser } from "react-icons/fa";
 import { FiSearch, FiShoppingCart } from "react-icons/fi";
 import {
   IoBagCheckOutline,
@@ -15,6 +15,9 @@ import { useWishlist } from "../../context/WishlistContext";
 import { TfiClose } from "react-icons/tfi";
 import { BsBagX } from "react-icons/bs";
 import { client } from "@/app/lib/sanity";
+import { motion } from "framer-motion";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 interface SanityProduct {
   _id: string;
@@ -54,6 +57,25 @@ const Navbar = () => {
   const [filteredProducts, setFilteredProducts] = useState<SanityProduct[]>([]);
   const [products, setProducts] = useState<SanityProduct[]>([]);
   const pathname = usePathname();
+  const [isUserOpen, setIsUserOpen] = useState(false);
+  const [user, setUser] = useState<{ username: string; email: string } | null>(
+    null
+  );
+  const router = useRouter();
+
+  useEffect(() => {
+    const userCookie = Cookies.get("user");
+    if (userCookie) {
+      setUser(JSON.parse(userCookie));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    Cookies.remove("user");
+    setUser(null);
+    setIsUserOpen(false);
+    router.push("/components/login");
+  };
 
   const navItems = [
     { label: "Home", href: "/" },
@@ -65,8 +87,6 @@ const Navbar = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        
-
         const data = await client.fetch(`*[_type=="product"]{
           _id,
           title,
@@ -108,11 +128,16 @@ const Navbar = () => {
     );
   };
 
+  const handleUserClick = () => {
+    setCartVisible(false);
+    setIsSearchOpen(false);
+    setIsWishOpen(false);
+    setIsSidebarOpen(false);
+    setIsUserOpen(!isUserOpen);
+  };
+
   const handleAddToCart = (item: WishItem) => {
- 
     addToCart(item);
-  
-   
     removeFromWishlist(item.id);
   };
 
@@ -120,17 +145,24 @@ const Navbar = () => {
     setCartVisible(!CartVisible);
     setIsSearchOpen(false);
     setIsWishOpen(false);
+    setIsUserOpen(false);
+    setIsSidebarOpen(false);
   };
 
   const handleWishClick = () => {
     setIsWishOpen(!isWishOpen);
     setIsSearchOpen(false);
     setCartVisible(false);
+    setIsUserOpen(false);
+    setIsSidebarOpen(false);
   };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
     setIsSearchOpen(false);
+    setIsUserOpen(false);
+    setIsWishOpen(false);
+    setCartVisible(false);
   };
 
   return (
@@ -197,7 +229,10 @@ const Navbar = () => {
               )}
             </button>
 
-            <button className="relative text-gray-600 hover:text-[#B88E2F] transition-colors duration-200">
+            <button
+              className="relative text-gray-600 hover:text-[#B88E2F] transition-colors duration-200"
+              onClick={handleUserClick}
+            >
               <FaRegUser size={20} />
             </button>
 
@@ -207,180 +242,276 @@ const Navbar = () => {
           </div>
         </div>
 
+        {isUserOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-12 right-0 bg-white shadow-lg rounded-lg p-5 w-56 text-center"
+          >
+            {user ? (
+              <>
+                <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                  <FaUser className="text-gray-600 w-8 h-8" />
+                </div>
+
+                <p className="mt-3 text-lg font-semibold text-gray-800">
+                  {user.username}
+                </p>
+
+                <button
+                  onClick={handleLogout}
+                  className="mt-4 bg-[#B88E2F] text-white px-4 py-2 rounded-lg hover:bg-[#A6791D] transition"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/components/login">
+                <button className="mt-4 bg-[#B88E2F] text-white px-4 py-2 rounded-lg hover:bg-[#A6791D] transition">
+                  Login
+                </button>
+              </Link>
+            )}
+          </motion.div>
+        )}
+
         {isSidebarOpen && (
           <>
-            <div
-              className="fixed inset-0 bg-black opacity-50 z-10"
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black z-10"
               onClick={toggleSidebar}
-              aria-hidden="true"
-            ></div>
+            ></motion.div>
 
-            <div
-              className="fixed top-0 right-0 w-64 h-full bg-white shadow-lg z-20 transform transition-transform duration-300 ease-in-out"
-              style={{
-                transform: isSidebarOpen ? "translateX(0)" : "translateX(100%)",
-              }}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 100, damping: 15 }}
+              className="fixed top-0 right-0 w-72 h-full bg-white shadow-xl z-20 rounded-l-3xl flex flex-col p-6"
             >
               <button
-                className="absolute top-4 right-4 text-gray-600 hover:text-[#B88E2F] focus:outline-none"
+                className="absolute top-5 right-5 text-gray-600 hover:text-[#B88E2F] transition-transform transform hover:scale-110"
                 onClick={toggleSidebar}
                 aria-label="Close Sidebar"
               >
-                <IoClose size={24} />
+                <IoClose size={28} />
               </button>
 
-              <div className="mt-16 space-y-4">
+              <nav className="mt-16 space-y-4">
                 {navItems.map(({ label, href }, index) => (
                   <Link
                     key={index}
                     href={href}
-                    className="block text-lg font-semibold text-[#333333] hover:text-[#B88E2F] transition-colors duration-200 ease-in-out px-6 py-3"
+                    className="block text-lg font-semibold text-[#333333] hover:text-[#B88E2F] px-6 py-3 transition-all duration-300 rounded-md hover:bg-gray-100"
                   >
                     {label}
                   </Link>
                 ))}
-              </div>
-            </div>
+              </nav>
+            </motion.div>
           </>
         )}
       </nav>
 
       {CartVisible && (
-        <div className="absolute top-0 md:right-6 right-4 h-auto bg-white shadow-lg md:w-[24rem] w-[18rem] p-4 rounded-sm z-50">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold mb-4">Shopping Cart</h3>
-            <button
-              className="mb-4"
-              onClick={() => setCartVisible(!CartVisible)}
-            >
-              <BsBagX size={20} className="text-[#B88E2F]" />
-            </button>
-          </div>
-          {cartItems.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-black opacity-70 font-semibold text-lg">
-                Your cart is empty.
-              </p>
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black z-10"
+            onClick={toggleSidebar}
+          ></motion.div>
+          <motion.div
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", stiffness: 100, damping: 15 }}
+            className="fixed top-0 right-0 h-full bg-white shadow-2xl w-[18rem] md:w-[24rem] p-5 rounded-l-lg z-50"
+          >
+            <div className="flex justify-between items-center pb-3">
+              <h3 className="text-2xl font-bold text-[#B88E2F]">
+                Furniro Cart
+              </h3>
+              <button onClick={() => setCartVisible(false)}>
+                <BsBagX
+                  size={22}
+                  className="text-[#B88E2F] hover:scale-110 transition-transform"
+                />
+              </button>
             </div>
-          ) : (
-            <div>
-              {cartItems.map((item: CartItem) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center mb-4 border-t border-gray pt-4"
-                >
-                  <div className="flex items-center gap-4">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      width={50}
-                      height={50}
-                      className="rounded-lg w-[5rem] h-[5rem]"
-                    />
-                    <div>
-                      <h4 className="text-sm font-medium">{item.title}</h4>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {item.quantity} x{" "}
-                        <span className="text-[#B88E2F] text-xs">
-                          Rs. {item.price.toLocaleString()}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    className="hover:text-red-500"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    <TfiClose
-                      size={20}
-                      className="px-1 py-0.5 bg-[#9F9F9F] text-white rounded-full hover:bg-[#B88E2F]"
-                    />
+
+            {cartItems.length === 0 ? (
+              <div className="relative mt-24 text-center z-10 px-8 py-6 bg-white bg-opacity-70 backdrop-blur-lg rounded-2xl shadow-lg">
+                <p className="text-xl font-semibold text-gray-800 animate-bounce mb-4">
+                  Your cart is empty.
+                </p>
+                <p className="text-sm mt-3 text-gray-600 opacity-90 mb-6">
+                  Add some products to your cart and make shopping a breeze!
+                </p>
+                <Link href={"/Pages/shop"}>
+                  <button className="mt-4 inline-block px-8 py-3 bg-[#B88E2F] text-white text-md font-semibold rounded-full shadow-md hover:scale-105 transform transition-all">
+                    Start Shopping
                   </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="flex justify-between items-center pt-4 pb-5">
-            <span className="text-base font-medium">Subtotal</span>
-            <span className="text-base font-bold text-[#B88E2F]">
-              Rs. {totalPrice.toLocaleString()}
-            </span>
-          </div>
-          <div className="border-t border-gray flex justify-between gap-3">
-            <Link href="/Pages/Cart">
-              <button className="mt-4 hover:bg-[#B88E2F] hover:text-white text-black border-[#9F9F9F] border-2 py-1 px-6 hover:border-none rounded-full text-center font-medium text-sm">
-                Cart
-              </button>
-            </Link>
-            <Link href="/Pages/Checkout">
-              <button
-                className={`mt-4 text-black border-[#9F9F9F] border-2 py-1 px-6 rounded-full text-center font-medium text-sm ${
-                  cartItems.length === 0
-                    ? "cursor-not-allowed text-gray-400 border-gray-400 bg-transparent"
-                    : "hover:bg-[#B88E2F] hover:border-none hover:text-white"
-                }`}
-                disabled={cartItems.length === 0}
-              >
-                {cartItems.length === 0 ? "Your cart is empty" : "Checkout"}
-              </button>
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {isWishOpen && (
-        <div className="absolute top-0 md:right-6 right-4 h-auto bg-white shadow-lg md:w-[24rem] w-[18rem] p-4 rounded-sm z-50">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold mb-4">Wishlist</h3>
-            <button className="mb-4" onClick={()=> setIsWishOpen(!isWishOpen)}>
-              <IoHeartDislikeSharp size={20} className="text-[#B88E2F]" />
-            </button>
-          </div>
-
-          {wishlistItems?.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-black opacity-70 font-semibold text-lg">
-                Your Wishlist is empty.
-              </p>
-            </div>
-          ) : (
-            <div>
-              {wishlistItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center mb-4 border-t border-gray-200 pt-4"
-                >
-                  <div className="flex items-center gap-4">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      width={50}
-                      height={50}
-                      className="rounded-lg w-[5rem] h-[5rem] object-cover"
-                    />
-                    <div>
-                      <h4 className="text-sm font-medium">{item.title}</h4>
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4 overflow-y-auto max-h-[60vh]">
+                {cartItems.map((item: CartItem, index) => (
+                  <div
+                  key={`${item.id}-${index}`}
+                    className="flex justify-between items-center py-3 border-b"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        width={50}
+                        height={50}
+                        className="rounded-lg w-[5rem] h-[5rem]"
+                      />
+                      <div>
+                        <h4 className="text-sm font-medium">{item.title}</h4>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {item.quantity} x{" "}
+                          <span className="text-[#B88E2F] text-xs">
+                            Rs. {item.price.toLocaleString()}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
                     <button
-                      className="bg-[#9F9F9F] text-white px-2 py-1 rounded-md hover:bg-[#B88E2F]"
-                      onClick={() => handleAddToCart(item)}
+                      className="hover:text-red-500"
+                      onClick={() => removeFromCart(item.id)}
                     >
-                      <IoBagCheckOutline size={15} />
-                    </button>
-                    <button onClick={() => removeFromWishlist(item.id)}>
                       <TfiClose
                         size={20}
                         className="px-1 py-0.5 bg-[#9F9F9F] text-white rounded-full hover:bg-[#B88E2F]"
                       />
                     </button>
                   </div>
+                ))}
+              </div>
+            )}
+
+            {cartItems.length > 0 && (
+              <>
+                <div className="flex justify-between items-center py-4 text-lg font-semibold">
+                  <span>Subtotal</span>
+                  <span className="text-[#B88E2F]">
+                    Rs. {totalPrice.toLocaleString()}
+                  </span>
                 </div>
-              ))}
+
+                <div className="border-t pt-4 flex justify-between gap-3">
+                  <Link href="/Pages/Cart">
+                    <button className="px-6 py-2 rounded-full text-xs font-medium bg-[#B88E2F] text-white transition">
+                      View Cart
+                    </button>
+                  </Link>
+                  <Link href="/Pages/Checkout">
+                    <button
+                      className={`px-6 py-2 rounded-full text-xs font-medium transition ${
+                        cartItems.length === 0
+                          ? "cursor-not-allowed bg-[#B88E2F] text-white"
+                          : "bg-[#B88E2F] text-white"
+                      }`}
+                      disabled={cartItems.length === 0}
+                    >
+                      Checkout
+                    </button>
+                  </Link>
+                </div>
+              </>
+            )}
+          </motion.div>
+        </>
+      )}
+
+      {isWishOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black z-10"
+            onClick={toggleSidebar}
+          ></motion.div>
+          <motion.div
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", stiffness: 100, damping: 15 }}
+            className="fixed top-0 right-0 h-full bg-white shadow-2xl w-[18rem] md:w-[24rem] p-5 rounded-l-lg z-50"
+          >
+            <div className="flex justify-between items-center pb-3">
+              <h3 className="text-2xl font-bold text-[#B88E2F]">Wishlist</h3>
+              <button onClick={() => setIsWishOpen(!isWishOpen)}>
+                <IoHeartDislikeSharp
+                  size={22}
+                  className="text-[#B88E2F] hover:scale-110 transition-transform"
+                />
+              </button>
             </div>
-          )}
-        </div>
+
+            {wishlistItems?.length === 0 ? (
+              <div className="relative mt-24 text-center z-10 px-8 py-6 bg-white bg-opacity-70 backdrop-blur-lg rounded-2xl shadow-lg">
+                <p className="text-xl font-semibold text-gray-800 animate-bounce mb-4">
+                  Your Wishlist is empty.
+                </p>
+                <p className="text-sm mt-3 text-gray-600 opacity-90 mb-6">
+                  Add some items to your wishlist to save them for later!
+                </p>
+                <Link href={"/Pages/shop"}>
+                  <button className="mt-4 inline-block px-8 py-3 bg-[#B88E2F] text-white text-md font-semibold rounded-full shadow-md hover:scale-105 transform transition-all">
+                    Start Shopping
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4 overflow-y-auto max-h-[60vh]">
+                {wishlistItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center py-3 border-b"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        width={50}
+                        height={50}
+                        className="rounded-lg w-[5rem] h-[5rem] object-cover"
+                      />
+                      <div>
+                        <h4 className="text-sm font-medium">{item.title}</h4>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className="bg-[#9F9F9F] text-white px-2 py-1 rounded-md hover:bg-[#B88E2F]"
+                        onClick={() => handleAddToCart(item)}
+                      >
+                        <IoBagCheckOutline size={15} />
+                      </button>
+                      <button onClick={() => removeFromWishlist(item.id)}>
+                        <TfiClose
+                          size={20}
+                          className="px-1 py-0.5 bg-[#9F9F9F] text-white rounded-full hover:bg-[#B88E2F]"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </>
       )}
 
       {isSearchOpen && (
