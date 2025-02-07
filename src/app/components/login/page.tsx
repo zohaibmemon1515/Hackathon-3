@@ -200,7 +200,7 @@ export default function Login() {
             <p className="text-sm text-gray-500">
               Don&apos;t have an account?{" "}
               <a
-                href="/components/signup"
+                href="/components/signUp"
                 className="text-[#B88E2F] font-semibold"
               >
                 Signup
