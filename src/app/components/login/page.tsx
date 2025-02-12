@@ -80,31 +80,33 @@ export default function Login() {
           `*[_type == "user" && email == $email][0]`,
           { email: values.email.toLowerCase() }
         );
-
+    
         if (!user) {
           showToast("Email not found. Please sign up.", "error");
           setLoading(false);
           return;
         }
-
-        const isPasswordMatch = await bcrypt.compare(
-          values.password,
-          user.password
-        );
-
+    
+        const isPasswordMatch = await bcrypt.compare(values.password, user.password);
+    
         if (!isPasswordMatch) {
           showToast("Incorrect password. Please try again.", "error");
           setLoading(false);
           return;
         }
-
-        // Save user session in cookies
-        Cookies.set("user", JSON.stringify({ email: user.email, username: user.username }), { expires: 7 });
-
+    
+        Cookies.set("user", JSON.stringify({ 
+          userId: user._id, 
+          email: user.email, 
+          username: user.username 
+        }), { expires: 7 });
+    
+        
         showToast("Login successful!", "success");
         setTimeout(() => router.push("/"), 3000);
-      } catch {
+      } catch (error) {
         showToast("Login failed. Try again!", "error");
+        console.error("Login error:", error);
       } finally {
         setLoading(false);
       }

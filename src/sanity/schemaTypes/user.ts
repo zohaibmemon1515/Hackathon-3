@@ -18,11 +18,6 @@ const userSchema = {
       title: "Password",
       type: "string",
     },
-    {
-      name: "userId",
-      title: "User ID",
-      type: "string",
-    },
   ],
 };
 

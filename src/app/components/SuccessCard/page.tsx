@@ -23,8 +23,8 @@ const SuccessCard: React.FC = () => {
     return null;
   }
 
-  const email = searchParams.get("email") || "unknown";
-  const orderId = searchParams.get("orderId") || "12345XYZ";
+  const email = searchParams.get("email");
+  const orderId = searchParams.get("orderId");
 
   const handleNavigation = () => {
     setLoading(true);

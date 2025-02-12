@@ -6,28 +6,32 @@ import { client } from "@/app/lib/sanity";
 import { useRouter } from "next/navigation";
 import { FiShoppingCart } from "react-icons/fi";
 import Link from "next/link";
+import Cookies from "js-cookie";
 
 const CheckoutForm = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [cardNumber, setCardNumber] = useState("");
   const [cardNumberError, setCardNumberError] = useState("");
-  const { cartItems, totalPrice, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const { cartItems, totalPrice, clearCart } = useCart();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    company: "",
     country: "Pakistan",
-    street: "",
+    streetAddress: "",
     city: "",
-    province: "",
-    zip: "",
+    state: "",
+    zipCode: "",
     phone: "",
     email: "",
-    additionalInfo: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
+
+  // Fetch userId from the "user" cookie
+  const userCookie = Cookies.get("user");
+  const userData = userCookie ? JSON.parse(userCookie) : null;
+  const userId = userData?.userId;
 
   const provinces = [
     "Punjab",
@@ -65,10 +69,11 @@ const CheckoutForm = () => {
     if (!formData.lastName || !/^[A-Za-z]+$/.test(formData.lastName))
       newErrors.lastName =
         "Last name is required and should contain only alphabets.";
-    if (!formData.street) newErrors.street = "Street address is required.";
+    if (!formData.streetAddress)
+      newErrors.streetAddress = "Street address is required.";
     if (!formData.city) newErrors.city = "City is required.";
-    if (!formData.province) newErrors.province = "Province is required.";
-    if (!formData.zip) newErrors.zip = "ZIP Code is required.";
+    if (!formData.state) newErrors.state = "State/Province is required.";
+    if (!formData.zipCode) newErrors.zipCode = "ZIP Code is required.";
     if (!formData.phone || !/^\d{11}$/.test(formData.phone))
       newErrors.phone = "Phone number is required and should be 11 digits.";
     if (
@@ -106,42 +111,33 @@ const CheckoutForm = () => {
 
     if (!validateForm()) return;
 
-    const orderId = Math.floor(100000 + Math.random() * 900000);
     const productIds = cartItems.map((item) => item.id);
 
     const doc = {
-      _type: "order",
-      order_id: orderId.toString(),
-      orderDate: new Date(),
+      _type: "Order",
+      orderDate: new Date().toISOString(),
       product_id: productIds,
-      notes: formData.additionalInfo,
       firstName: formData.firstName,
       lastName: formData.lastName,
-      companyName: formData.company,
-      paymentMethod: paymentMethod,
       country: formData.country,
-      streetAddress: formData.street,
+      streetAddress: formData.streetAddress,
       city: formData.city,
-      state: formData.province,
-      zipCode: formData.zip,
+      state: formData.state,
+      zipCode: formData.zipCode,
       email: formData.email,
-      phone: formData.phone,
+      phone: Number(formData.phone),
+      userId: userId,
     };
 
     try {
-     
-      await client.create(doc);
-  
+      const response = await client.create(doc);
+
+      const orderId = response._id;
+
     
-      console.log({
-        email: formData.email,
-        orderId: orderId,
-        firstName: formData.firstName,
-        orderItems: cartItems,
-      });
-  
-    
-      const response = await fetch("/api/sendEmail", {
+
+   
+      const emailResponse = await fetch("/api/sendEmail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -153,8 +149,8 @@ const CheckoutForm = () => {
           orderItems: cartItems,
         }),
       });
-  
-      if (response.ok) {
+
+      if (emailResponse.ok) {
         clearCart();
         router.push(
           `/components/SuccessCard?email=${encodeURIComponent(formData.email)}&orderId=${orderId}`
@@ -189,7 +185,9 @@ const CheckoutForm = () => {
                 type="text"
                 value={formData.firstName}
                 onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.firstName ? "border-red-500" : ""}`}
+                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${
+                  errors.firstName ? "border-red-500" : ""
+                }`}
               />
               {errors.firstName && (
                 <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
@@ -208,64 +206,12 @@ const CheckoutForm = () => {
                 type="text"
                 value={formData.lastName}
                 onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.lastName ? "border-red-500" : ""}`}
+                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${
+                  errors.lastName ? "border-red-500" : ""
+                }`}
               />
               {errors.lastName && (
                 <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col">
-              <label
-                htmlFor="company"
-                className="mb-2 font-medium text-gray-700"
-              >
-                Company
-              </label>
-              <input
-                id="company"
-                type="text"
-                value={formData.company}
-                onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.company ? "border-red-500" : ""}`}
-              />
-              {errors.company && (
-                <p className="text-red-500 text-sm mt-1">{errors.company}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col">
-              <label
-                htmlFor="street"
-                className="mb-2 font-medium text-gray-700"
-              >
-                Street
-              </label>
-              <input
-                id="street"
-                type="text"
-                value={formData.street}
-                onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.street ? "border-red-500" : ""}`}
-              />
-              {errors.street && (
-                <p className="text-red-500 text-sm mt-1">{errors.street}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col">
-              <label htmlFor="zip" className="mb-2 font-medium text-gray-700">
-                Zip Code
-              </label>
-              <input
-                id="zip"
-                type="number"
-                value={formData.zip}
-                onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.zip ? "border-red-500" : ""}`}
-              />
-              {errors.zip && (
-                <p className="text-red-500 text-sm mt-1">{errors.zip}</p>
               )}
             </div>
 
@@ -275,17 +221,19 @@ const CheckoutForm = () => {
               </label>
               <input
                 id="phone"
-                type="number"
+                type="text"
                 value={formData.phone}
                 onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.phone ? "border-red-500" : ""}`}
+                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${
+                  errors.phone ? "border-red-500" : ""
+                }`}
               />
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
               )}
             </div>
 
-            <div className="flex flex-col ">
+            <div className="flex flex-col">
               <label htmlFor="email" className="mb-2 font-medium text-gray-700">
                 Email
               </label>
@@ -294,46 +242,70 @@ const CheckoutForm = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.email ? "border-red-500" : ""}`}
+                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${
+                  errors.email ? "border-red-500" : ""
+                }`}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
               )}
             </div>
 
-            <div className="flex flex-col ">
+            <div className="flex flex-col">
               <label
-                htmlFor="country"
+                htmlFor="streetAddress"
                 className="mb-2 font-medium text-gray-700"
               >
-                Country
+                Street Address
               </label>
-              <select
-                id="country"
-                value={formData.country}
+              <input
+                id="streetAddress"
+                type="text"
+                value={formData.streetAddress}
                 onChange={handleChange}
-                className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${errors.country ? "border-red-500" : ""}`}
-                disabled
-              >
-                <option value="Pakistan">Pakistan</option>
-              </select>
-              {errors.country && (
-                <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${
+                  errors.streetAddress ? "border-red-500" : ""
+                }`}
+              />
+              {errors.streetAddress && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.streetAddress}
+                </p>
               )}
             </div>
 
-            <div className="flex flex-col ">
+            <div className="flex flex-col">
               <label
-                htmlFor="province"
+                htmlFor="zipCode"
                 className="mb-2 font-medium text-gray-700"
               >
-                Province
+                ZIP Code
+              </label>
+              <input
+                id="zipCode"
+                type="text"
+                value={formData.zipCode}
+                onChange={handleChange}
+                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${
+                  errors.zipCode ? "border-red-500" : ""
+                }`}
+              />
+              {errors.zipCode && (
+                <p className="text-red-500 text-sm mt-1">{errors.zipCode}</p>
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="state" className="mb-2 font-medium text-gray-700">
+                State/Province
               </label>
               <select
-                id="province"
-                value={formData.province}
+                id="state"
+                value={formData.state}
                 onChange={handleChange}
-                className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${errors.province ? "border-red-500" : ""}`}
+                className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${
+                  errors.state ? "border-red-500" : ""
+                }`}
               >
                 <option value="">Select Province</option>
                 {provinces.map((province) => (
@@ -342,8 +314,8 @@ const CheckoutForm = () => {
                   </option>
                 ))}
               </select>
-              {errors.province && (
-                <p className="text-red-500 text-sm mt-1">{errors.province}</p>
+              {errors.state && (
+                <p className="text-red-500 text-sm mt-1">{errors.state}</p>
               )}
             </div>
 
@@ -355,11 +327,13 @@ const CheckoutForm = () => {
                 id="city"
                 value={formData.city}
                 onChange={handleChange}
-                className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${errors.city ? "border-red-500" : ""}`}
+                className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${
+                  errors.city ? "border-red-500" : ""
+                }`}
               >
                 <option value="">Select City</option>
-                {formData.province &&
-                  cities[formData.province]?.map((city) => (
+                {formData.state &&
+                  cities[formData.state]?.map((city) => (
                     <option key={city} value={city}>
                       {city}
                     </option>
@@ -369,27 +343,27 @@ const CheckoutForm = () => {
                 <p className="text-red-500 text-sm mt-1">{errors.city}</p>
               )}
             </div>
-
-            <div className="flex flex-col sm:col-span-2">
-              <label
-                htmlFor="additionalInfo"
-                className="mb-2 font-medium text-gray-700"
-              >
-                Additional Information
-              </label>
-              <textarea
-                id="additionalInfo"
-                value={formData.additionalInfo}
-                onChange={handleChange}
-                className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-gray-500 ${errors.additionalInfo ? "border-red-500" : ""}`}
-              />
-              {errors.additionalInfo && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.additionalInfo}
-                </p>
-              )}
-            </div>
           </form>
+
+          <div className="flex flex-col mt-[1.5rem]">
+            <label htmlFor="country" className="mb-2 font-medium text-gray-700">
+              Country
+            </label>
+            <select
+              id="country"
+              value={formData.country}
+              onChange={handleChange}
+              className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${
+                errors.country ? "border-red-500" : ""
+              }`}
+              disabled
+            >
+              <option value="Pakistan">Pakistan</option>
+            </select>
+            {errors.country && (
+              <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+            )}
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">

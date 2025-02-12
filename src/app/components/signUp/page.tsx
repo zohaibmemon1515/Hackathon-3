@@ -77,26 +77,25 @@ export default function Signup() {
           `*[_type == "user" && email == $email][0]`,
           { email: values.email }
         );
-
+    
         if (existingUser) {
           showToast("This email is already registered. Please login.", "error");
           setLoading(false);
           return;
         }
-
+    
         const hashedPassword = await bcrypt.hash(values.password, 10);
-
-        const userId = `user_${Date.now()}`;
-
-        const response = await client.create({
+    
+        const user = await client.create({
           _type: "user",
-          userId: userId,
           username: values.username,
-          email: values.email,
+          email: values.email.toLowerCase(),
           password: hashedPassword,
         });
-
-        if (response) {
+        
+        console.log("User created:", user);
+    
+        try {
           const emailResponse = await fetch("/api/signupEmail", {
             method: "POST",
             headers: {
@@ -104,16 +103,19 @@ export default function Signup() {
             },
             body: JSON.stringify({ email: values.email, username: values.username }),
           });
-
-          if (emailResponse.ok) {
-            showToast("Signup successful!.", "success");
-            setTimeout(() => router.push("/components/login"), 3000);
-          } else {
-            showToast("Failed to send welcome email.", "error");
+    
+          if (!emailResponse.ok) {
+            console.error("Failed to send welcome email.");
           }
+        } catch (emailError) {
+          console.error("Email sending error:", emailError);
         }
-      } catch {
+    
+        showToast("Signup successful! Please login.", "success");
+        setTimeout(() => router.push("/components/login"), 3000);
+      } catch (error) {
         showToast("Signup failed. Try again!", "error");
+        console.error("Signup error:", error);
       } finally {
         setLoading(false);
       }
