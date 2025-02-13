@@ -1,6 +1,6 @@
-// WishlistContext.tsx
-"use client"; // Add this at the top if you're using Next.js 13+ and this context is client-side only
+"use client";
 import React, { createContext, useState, useEffect, useContext } from "react";
+import Cookies from "js-cookie";
 
 interface WishlistItem {
   id: string;
@@ -16,9 +16,7 @@ interface WishlistContextType {
   removeFromWishlist: (id: string) => void;
 }
 
-const WishlistContext = createContext<WishlistContextType | undefined>(
-  undefined
-);
+const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -26,17 +24,22 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
 
   useEffect(() => {
-    const storedWishlist = localStorage.getItem("wishlistItems");
+    const storedWishlist = Cookies.get("wishlistItems");
     if (storedWishlist) {
-      setWishlistItems(JSON.parse(storedWishlist));
+      try {
+        setWishlistItems(JSON.parse(storedWishlist));
+      } catch (error) {
+        console.error("Error parsing wishlist data from cookies", error);
+      }
     }
   }, []);
 
+ 
   useEffect(() => {
     if (wishlistItems.length > 0) {
-      localStorage.setItem("wishlistItems", JSON.stringify(wishlistItems));
+      Cookies.set("wishlistItems", JSON.stringify(wishlistItems), { expires: 7 }); 
     } else {
-      localStorage.removeItem("wishlistItems");
+      Cookies.remove("wishlistItems");
     }
   }, [wishlistItems]);
 
@@ -44,9 +47,9 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
     setWishlistItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === newItem.id);
       if (existingItem) {
-        return prevItems;
+        return prevItems; 
       } else {
-        return [...prevItems, newItem];
+        return [...prevItems, newItem]; 
       }
     });
   };

@@ -12,6 +12,8 @@ const CheckoutForm = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [cardNumber, setCardNumber] = useState("");
   const [cardNumberError, setCardNumberError] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [cvv, setCvv] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const { cartItems, totalPrice, clearCart } = useCart();
   const [formData, setFormData] = useState({
@@ -60,6 +62,71 @@ const CheckoutForm = () => {
     setIsMounted(true);
   }, []);
 
+  // Format card number with hyphens
+  const formatCardNumber = (value: string): string => {
+    const cleanedValue = value.replace(/\D/g, ""); // Remove non-numeric characters
+    const formattedValue = cleanedValue.match(/.{1,4}/g)?.join("-") || "";
+    return formattedValue;
+  };
+
+  // Handle card number input change
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const formattedValue = formatCardNumber(inputValue);
+    setCardNumber(formattedValue);
+    validateCardNumber(formattedValue.replace(/-/g, "")); // Validate without hyphens
+  };
+
+  // Validate card number using Luhn algorithm
+  const validateCardNumber = (cardNumber: string): boolean => {
+    const cleanedCardNumber = cardNumber.replace(/\D/g, "");
+
+    if (cleanedCardNumber.length !== 16) {
+      setCardNumberError("Card number must be 16 digits.");
+      return false;
+    }
+
+    let sum = 0;
+    for (let i = 0; i < cleanedCardNumber.length; i++) {
+      let digit = parseInt(cleanedCardNumber[i], 10);
+      if (i % 2 === 0) {
+        digit *= 2;
+        if (digit > 9) {
+          digit = digit - 9;
+        }
+      }
+      sum += digit;
+    }
+
+    if (sum % 10 !== 0) {
+      setCardNumberError("Invalid card number.");
+      return false;
+    }
+
+    setCardNumberError("");
+    return true;
+  };
+
+  // Handle expiry date input change
+  const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const cleanedValue = inputValue.replace(/\D/g, ""); // Remove non-numeric characters
+    let formattedValue = cleanedValue;
+
+    if (cleanedValue.length > 2) {
+      formattedValue = `${cleanedValue.slice(0, 2)}/${cleanedValue.slice(2, 4)}`;
+    }
+
+    setExpiryDate(formattedValue);
+  };
+
+  // Handle CVV input change
+  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const cleanedValue = inputValue.replace(/\D/g, ""); // Remove non-numeric characters
+    setCvv(cleanedValue);
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -88,15 +155,6 @@ const CheckoutForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateCardNumber = () => {
-    const cardNumberRegex = /^\d{16}$/;
-    if (!cardNumberRegex.test(cardNumber)) {
-      setCardNumberError("Please enter a valid 16-digit card number.");
-    } else {
-      setCardNumberError("");
-    }
-  };
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -110,6 +168,21 @@ const CheckoutForm = () => {
     e.preventDefault();
 
     if (!validateForm()) return;
+
+    if (paymentMethod === "bank") {
+      if (!validateCardNumber(cardNumber.replace(/-/g, ""))) {
+        alert("Please enter a valid card number.");
+        return;
+      }
+      if (!expiryDate || !/^\d{2}\/\d{2}$/.test(expiryDate)) {
+        alert("Please enter a valid expiry date (MM/YY).");
+        return;
+      }
+      if (!cvv || !/^\d{3}$/.test(cvv)) {
+        alert("Please enter a valid CVV.");
+        return;
+      }
+    }
 
     const productIds = cartItems.map((item) => item.id);
 
@@ -131,12 +204,8 @@ const CheckoutForm = () => {
 
     try {
       const response = await client.create(doc);
-
       const orderId = response._id;
 
-    
-
-   
       const emailResponse = await fetch("/api/sendEmail", {
         method: "POST",
         headers: {
@@ -153,7 +222,9 @@ const CheckoutForm = () => {
       if (emailResponse.ok) {
         clearCart();
         router.push(
-          `/components/SuccessCard?email=${encodeURIComponent(formData.email)}&orderId=${orderId}`
+          `/components/SuccessCard?email=${encodeURIComponent(
+            formData.email
+          )}&orderId=${orderId}`
         );
       } else {
         alert("Failed to send order confirmation email.");
@@ -169,10 +240,11 @@ const CheckoutForm = () => {
   return (
     <div className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 px-6">
+        {/* Billing Details Form */}
         <div className="bg-white p-8 rounded-lg shadow-lg">
           <h2 className="text-3xl font-semibold mb-6">Billing Details</h2>
-
           <form className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* First Name */}
             <div className="flex flex-col">
               <label
                 htmlFor="firstName"
@@ -194,6 +266,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
+            {/* Last Name */}
             <div className="flex flex-col">
               <label
                 htmlFor="lastName"
@@ -215,6 +288,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
+            {/* Phone */}
             <div className="flex flex-col">
               <label htmlFor="phone" className="mb-2 font-medium text-gray-700">
                 Phone
@@ -233,6 +307,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
+            {/* Email */}
             <div className="flex flex-col">
               <label htmlFor="email" className="mb-2 font-medium text-gray-700">
                 Email
@@ -251,6 +326,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
+            {/* Street Address */}
             <div className="flex flex-col">
               <label
                 htmlFor="streetAddress"
@@ -274,6 +350,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
+            {/* ZIP Code */}
             <div className="flex flex-col">
               <label
                 htmlFor="zipCode"
@@ -295,6 +372,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
+            {/* State/Province */}
             <div className="flex flex-col">
               <label htmlFor="state" className="mb-2 font-medium text-gray-700">
                 State/Province
@@ -319,6 +397,7 @@ const CheckoutForm = () => {
               )}
             </div>
 
+            {/* City */}
             <div className="flex flex-col">
               <label htmlFor="city" className="mb-2 font-medium text-gray-700">
                 City
@@ -343,29 +422,31 @@ const CheckoutForm = () => {
                 <p className="text-red-500 text-sm mt-1">{errors.city}</p>
               )}
             </div>
-          </form>
 
-          <div className="flex flex-col mt-[1.5rem]">
-            <label htmlFor="country" className="mb-2 font-medium text-gray-700">
-              Country
-            </label>
-            <select
-              id="country"
-              value={formData.country}
-              onChange={handleChange}
-              className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${
-                errors.country ? "border-red-500" : ""
-              }`}
-              disabled
-            >
-              <option value="Pakistan">Pakistan</option>
-            </select>
-            {errors.country && (
-              <p className="text-red-500 text-sm mt-1">{errors.country}</p>
-            )}
-          </div>
+            {/* Country */}
+            <div className="flex flex-col mt-[1.5rem]">
+              <label htmlFor="country" className="mb-2 font-medium text-gray-700">
+                Country
+              </label>
+              <select
+                id="country"
+                value={formData.country}
+                onChange={handleChange}
+                className={`border rounded-lg p-3 focus:ring-2 focus:ring-gray-500 ${
+                  errors.country ? "border-red-500" : ""
+                }`}
+                disabled
+              >
+                <option value="Pakistan">Pakistan</option>
+              </select>
+              {errors.country && (
+                <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+              )}
+            </div>
+          </form>
         </div>
 
+        {/* Cart and Payment Details */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-6">Your Cart</h2>
 
@@ -423,7 +504,7 @@ const CheckoutForm = () => {
                 <label className="block mb-2 font-semibold text-lg">
                   Payment Method
                 </label>
-                <div className="space-y-3 mt-5">
+                <div className="space-y-6 mt-5">
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"
@@ -441,6 +522,7 @@ const CheckoutForm = () => {
                   </div>
                   {paymentMethod === "bank" && (
                     <div className="pl-8">
+                      {/* Card Number */}
                       <div className="flex flex-col mb-4">
                         <label
                           htmlFor="cardNumber"
@@ -450,22 +532,60 @@ const CheckoutForm = () => {
                         </label>
                         <input
                           id="cardNumber"
-                          type="number"
+                          type="text"
                           className={`border p-3 rounded-md w-full ${
                             cardNumberError
                               ? "border-red-500"
                               : "border-gray-300"
                           }`}
-                          placeholder="Enter Card Number"
+                          placeholder="0000-0000-0000-0000"
                           value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          onBlur={validateCardNumber}
+                          onChange={handleCardNumberChange}
+                          maxLength={19} // 16 digits + 3 hyphens
                         />
                         {cardNumberError && (
                           <span className="text-red-500 text-sm mt-2">
                             {cardNumberError}
                           </span>
                         )}
+                      </div>
+
+                      {/* Expiry Date */}
+                      <div className="flex flex-col mb-4">
+                        <label
+                          htmlFor="expiryDate"
+                          className="mb-2 font-medium text-black"
+                        >
+                          Expiry Date (MM/YY)
+                        </label>
+                        <input
+                          id="expiryDate"
+                          type="text"
+                          className="border p-3 rounded-md w-full"
+                          placeholder="MM/YY"
+                          value={expiryDate}
+                          onChange={handleExpiryDateChange}
+                          maxLength={5} // MM/YY
+                        />
+                      </div>
+
+                      {/* CVV */}
+                      <div className="flex flex-col mb-4">
+                        <label
+                          htmlFor="cvv"
+                          className="mb-2 font-medium text-black"
+                        >
+                          CVV
+                        </label>
+                        <input
+                          id="cvv"
+                          type="text"
+                          className="border p-3 rounded-md w-full"
+                          placeholder="123"
+                          value={cvv}
+                          onChange={handleCvvChange}
+                          maxLength={3} // CVV is typically 3 digits
+                        />
                       </div>
                     </div>
                   )}

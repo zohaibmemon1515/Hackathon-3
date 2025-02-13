@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useState, useContext, useEffect } from "react";
+import Cookies from "js-cookie";
 
 interface CartItem {
   id: string;
@@ -24,23 +25,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedCart = localStorage.getItem("cartItems");
-      if (storedCart) {
-        try {
-          setCartItems(JSON.parse(storedCart));
-        } catch (error) {
-          console.error("Error parsing cart data from localStorage", error);
-        }
+    const storedCart = Cookies.get("cartItems");
+    if (storedCart) {
+      try {
+        setCartItems(JSON.parse(storedCart));
+      } catch (error) {
+        console.error("Error parsing cart data from cookies", error);
       }
     }
   }, []);
 
   useEffect(() => {
     if (cartItems.length > 0) {
-      localStorage.setItem("cartItems", JSON.stringify(cartItems));
+      Cookies.set("cartItems", JSON.stringify(cartItems), { expires: 7 }); // Expires in 7 days
     } else {
-      localStorage.removeItem("cartItems");
+      Cookies.remove("cartItems");
     }
   }, [cartItems]);
 
